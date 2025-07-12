@@ -1,60 +1,95 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+  Pressable,
+  ActivityIndicator
+} from 'react-native';
 import axios from 'axios';
 import { useStore } from '../context/StoreContext';
 import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
-  const { apiBaseUrl } = useStore();
+  const { apiBaseUrl, setToken, setUser } = useStore();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
     try {
+      setLoading(true);
+
       const res = await axios.post(`${apiBaseUrl}/api/user/login`, {
         email,
         password,
       });
 
-      console.log('Login response:', res.data);
-
       if (res.data.success) {
-        Alert.alert('Login successful', `You are logged in as ${res.data.role}`);
-        router.push('/landing'); // redirect after login
+        setToken(res.data.token);
+        setUser({ email, role: res.data.role });
+        router.replace('/landing');
       } else {
         Alert.alert('Login failed', res.data.message || 'Try again');
       }
     } catch (err) {
-      console.log('Login error:', err?.response?.data || err.message);
       Alert.alert('Login error', err?.response?.data?.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Grooviti Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        onChangeText={setEmail}
-        value={email}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
-      <Button title="Login" onPress={handleLogin} />
 
-      {/* Sign Up link */}
+      <View style={styles.inputWrapper}>
+        <MaterialIcons name="email" size={20} color="#FF6000" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          onChangeText={setEmail}
+          value={email}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+      </View>
+
+      <View style={styles.inputWrapper}>
+        <MaterialIcons name="lock" size={20} color="#FF6000" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          onChangeText={setPassword}
+          value={password}
+        />
+      </View>
+
+      <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
+      </Pressable>
+
       <TouchableOpacity onPress={() => router.push('/SignupScreen')}>
-        <Text style={styles.signupText}>Don't have an account? Sign up here</Text>
+        <Text style={styles.switchText}>
+          <Text style={styles.grey}>Don't have an account? </Text>
+          <Text style={styles.link}>Sign up</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -62,15 +97,50 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 20 },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: {
-    borderWidth: 1, borderColor: '#ccc', padding: 10,
-    marginBottom: 10, borderRadius: 5,
-  },
-  signupText: {
-    marginTop: 20,
-    color: 'blue',
+  heading: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 24,
     textAlign: 'center',
-    textDecorationLine: 'underline',
+    color: '#FF6000',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 10,
+  },
+  button: {
+    backgroundColor: '#FF6000',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  switchText: {
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  grey: {
+    color: '#666',
+  },
+  link: {
+    color: '#FF6000',
+    fontWeight: 'bold',
   },
 });
