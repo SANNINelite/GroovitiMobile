@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Pressable, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Pressable,
+  TouchableOpacity,
+} from 'react-native';
 import { router, useNavigation } from 'expo-router';
 import Swiper from 'react-native-swiper';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -25,8 +33,8 @@ export default function LandingScreen() {
   const navigation = useNavigation();
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Top Header */}
+    <View style={styles.page}>
+      {/* Header */}
       <View style={styles.header}>
         <Image
           source={require('../../assets/images/grooviti-full.png')}
@@ -37,14 +45,17 @@ export default function LandingScreen() {
           <TouchableOpacity onPress={() => router.push('/explore')}>
             <MaterialIcons name="search" size={24} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.openDrawer?.()} style={{ marginLeft: 16 }}>
+          <TouchableOpacity
+            onPress={() => navigation.openDrawer?.()}
+            style={{ marginLeft: 16 }}
+          >
             <MaterialIcons name="menu" size={28} color="#333" />
           </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 80 }}>
-        {/* Hero Swiper */}
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+        {/* Swiper */}
         <View style={styles.swiperContainer}>
           <Swiper autoplay dotStyle={styles.dot} activeDotStyle={styles.activeDot}>
             <Image source={require('../../assets/images/banner.jpg')} style={styles.heroImage} />
@@ -59,11 +70,14 @@ export default function LandingScreen() {
           <Pressable
             key={event.id}
             style={styles.eventCard}
-            onPress={() => router.push(`/event/${event.id}`)}>
+            onPress={() => router.push(`/event/${event.id}`)}
+          >
             <Image source={event.image} style={styles.eventImage} />
             <View style={styles.eventInfo}>
               <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventMeta}>{event.location} • {event.date}</Text>
+              <Text style={styles.eventMeta}>
+                {event.location} • {event.date}
+              </Text>
             </View>
           </Pressable>
         ))}
@@ -82,7 +96,8 @@ export default function LandingScreen() {
             styles.cta,
             { transform: [{ scale: pressed ? 0.96 : 1 }] },
           ]}
-          onPress={() => router.push('/explore')}>
+          onPress={() => router.push('/explore')}
+        >
           <Text style={styles.ctaText}>Explore Events Now</Text>
         </Pressable>
       </ScrollView>
@@ -91,6 +106,10 @@ export default function LandingScreen() {
 }
 
 const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -98,7 +117,6 @@ const styles = StyleSheet.create({
   header: {
     height: 60,
     paddingHorizontal: 16,
-    paddingVertical: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -116,7 +134,6 @@ const styles = StyleSheet.create({
   },
   swiperContainer: {
     height: 200,
-    marginTop: 20,
     marginBottom: 20,
     marginHorizontal: 20,
     borderRadius: 12,
