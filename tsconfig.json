@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "context/StoreContext.tsx"  ]
+, "context/StoreContext.tsx", "app/(app)/landing.tsx"  ]
 }

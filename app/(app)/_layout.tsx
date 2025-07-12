@@ -1,11 +1,16 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
+import Header from '../../components/Header'; // adjust path if needed
 
 export default function TabsLayout() {
   return (
     <View style={styles.wrapper}>
+      {/* Top Safe Area + Global Header */}
       <SafeAreaView style={styles.safeAreaTop} />
+      <Header />
+
+      {/* Tabs (Bottom Navigation) */}
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -65,11 +70,16 @@ export default function TabsLayout() {
         />
 
         {/* Hidden Screens */}
+        <Tabs.Screen name="about-us" options={{ href: null }} />
+        <Tabs.Screen name="plans" options={{ href: null }} />
+        <Tabs.Screen name="contact-us" options={{ href: null }} />
+        <Tabs.Screen name="communities" options={{ href: null }} />
         <Tabs.Screen name="events/[id]" options={{ href: null }} />
         <Tabs.Screen name="login" options={{ href: null }} />
         <Tabs.Screen name="edit-profile" options={{ href: null }} />
-        <Tabs.Screen name="logout" options={{ href: null }} />
       </Tabs>
+
+      {/* Bottom Safe Area */}
       <SafeAreaView style={styles.safeAreaBottom} />
     </View>
   );
@@ -78,7 +88,7 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#000', // Keeps notch area black
   },
   safeAreaTop: {
     backgroundColor: '#000',

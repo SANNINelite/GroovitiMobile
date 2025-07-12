@@ -6,11 +6,9 @@ import {
   ScrollView,
   Image,
   Pressable,
-  TouchableOpacity,
 } from 'react-native';
-import { router, useNavigation } from 'expo-router';
+import { router } from 'expo-router';
 import Swiper from 'react-native-swiper';
-import { MaterialIcons } from '@expo/vector-icons';
 
 const events = [
   {
@@ -30,30 +28,8 @@ const events = [
 ];
 
 export default function LandingScreen() {
-  const navigation = useNavigation();
-
   return (
     <View style={styles.page}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require('../../assets/images/grooviti-full.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <View style={styles.iconsRight}>
-          <TouchableOpacity onPress={() => router.push('/explore')}>
-            <MaterialIcons name="search" size={24} color="#333" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.openDrawer?.()}
-            style={{ marginLeft: 16 }}
-          >
-            <MaterialIcons name="menu" size={28} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Swiper */}
         <View style={styles.swiperContainer}>
@@ -70,7 +46,7 @@ export default function LandingScreen() {
           <Pressable
             key={event.id}
             style={styles.eventCard}
-            onPress={() => router.push(`/event/${event.id}`)}
+            onPress={() => router.push(`/events/${event.id}`)}
           >
             <Image source={event.image} style={styles.eventImage} />
             <View style={styles.eventInfo}>
@@ -113,24 +89,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    height: 60,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderBottomColor: '#eee',
-    borderBottomWidth: 1,
-  },
-  logo: {
-    width: 120,
-    height: 40,
-  },
-  iconsRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   swiperContainer: {
     height: 200,

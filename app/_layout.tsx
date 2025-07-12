@@ -1,29 +1,44 @@
-import { Slot } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar, StyleSheet } from 'react-native';
 import { StoreProvider } from '../context/StoreContext';
-import { View, StyleSheet } from 'react-native';
+import CustomDrawer from '../components/CustomDrawer';
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <StoreProvider>
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          <View style={styles.container}>
-            <Slot />
-          </View>
-        </SafeAreaView>
-      </StoreProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StoreProvider>
+          <StatusBar barStyle="light-content" />
+
+          {/* Top Safe Area */}
+          <SafeAreaView edges={['top']} style={styles.safeTop} />
+
+          {/* Drawer Navigation */}
+          <Drawer
+            drawerContent={(props) => <CustomDrawer {...props} />}
+            screenOptions={{
+              drawerPosition: 'right',
+              headerShown: false,
+            }}
+          >
+            <Drawer.Screen name="(app)" options={{ drawerLabel: 'Grooviti' }} />
+          </Drawer>
+
+          {/* Bottom Safe Area */}
+          <SafeAreaView edges={['bottom']} style={styles.safeBottom} />
+        </StoreProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#000', // background for top/bottom safe areas (can also use '#222' or 'grey')
+  safeTop: {
+    backgroundColor: '#000',
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#fff', // actual screen background
+  safeBottom: {
+    backgroundColor: '#000',
   },
 });
