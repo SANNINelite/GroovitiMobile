@@ -7,8 +7,8 @@ import React, {
 
 // Define the shape of user data
 export interface UserType {
-  name: string;
   email: string;
+  name?: string;
   profilePic?: string;
   followers?: number;
   following?: number;

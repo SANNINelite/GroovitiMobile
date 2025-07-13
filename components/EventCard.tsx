@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ImageSourcePropType } from 'react-native';
 
 interface EventCardProps {
   title: string;
   location: string;
   date: string;
-  image: any;
+  image: ImageSourcePropType;
   onPress?: () => void;
   themeColor?: string;
 }

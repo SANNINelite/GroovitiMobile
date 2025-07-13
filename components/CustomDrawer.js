@@ -1,5 +1,4 @@
-// components/CustomDrawer.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
@@ -17,13 +16,27 @@ export default function CustomDrawer(props) {
   };
 
   const menuItems = [
-    { label: 'Home', icon: 'home', route: '/landing' },
-    { label: 'Events', icon: 'event', route: '/explore' },
+    // { label: 'Home', icon: 'home', route: '/landing' },
+    // { label: 'Events', icon: 'event', route: '/explore' },
     { label: 'Communities', icon: 'group', route: '/communities' },
     { label: 'About Us', icon: 'info', route: '/about-us' },
     { label: 'Plans', icon: 'payments', route: '/plans' },
     { label: 'Contact Us', icon: 'call', route: '/contact-us' },
   ];
+
+  // ✅ Fix aria-hidden warning by blurring focused input when drawer closes
+  useEffect(() => {
+    const unsubscribe = props.navigation?.addListener('drawerClose', () => {
+      if (typeof document !== 'undefined') {
+        const active = document.activeElement;
+        if (active && typeof active.blur === 'function') {
+          active.blur(); // ⬅️ Blur any focused element
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [props.navigation]);
 
   return (
     <View style={styles.fullContainer}>

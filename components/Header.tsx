@@ -19,10 +19,10 @@ export default function Header() {
         resizeMode="contain"
       />
 
-      {/* Right: Search & Hamburger */}
+      {/* Right: Notification & Hamburger */}
       <View style={styles.iconsContainer}>
-        <TouchableOpacity onPress={() => router.push('/explore')}>
-          <MaterialIcons name="search" size={26} color="#333" style={styles.icon} />
+        <TouchableOpacity onPress={() => router.push('/notifications')}>
+          <MaterialIcons name="notifications-none" size={26} color="#333" style={styles.icon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.openDrawer()}>
           <MaterialIcons name="menu" size={26} color="#333" />

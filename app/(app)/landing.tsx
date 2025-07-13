@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,28 +6,52 @@ import {
   ScrollView,
   Image,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import Swiper from 'react-native-swiper';
+import { BASE_URL } from '../../constants';
 
-const events = [
-  {
-    id: '1',
-    title: 'Sunburn Mumbai',
-    location: 'Mumbai',
-    date: 'July 20',
-    image: require('../../assets/images/sunburn.jpg'),
-  },
-  {
-    id: '2',
-    title: 'EDM Bash Delhi',
-    location: 'Delhi',
-    date: 'Aug 5',
-    image: require('../../assets/images/edm.jpg'),
-  },
-];
+type Event = {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  availableTickets: number;
+  coverImage: {
+    url: string;
+  };
+  location: {
+    city: string;
+  };
+  isLive: boolean;
+};
 
 export default function LandingScreen() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/event/list`);
+        const json = await res.json();
+        if (json.success) {
+          setEvents(json.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const availableEvents = events.filter((event) => event.availableTickets > 0);
+
   return (
     <View style={styles.page}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -41,22 +65,32 @@ export default function LandingScreen() {
         </View>
 
         {/* Events */}
-        <Text style={styles.sectionTitle}>Upcoming Events</Text>
-        {events.map((event) => (
-          <Pressable
-            key={event.id}
-            style={styles.eventCard}
-            onPress={() => router.push(`/events/${event.id}`)}
-          >
-            <Image source={event.image} style={styles.eventImage} />
-            <View style={styles.eventInfo}>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventMeta}>
-                {event.location} • {event.date}
-              </Text>
-            </View>
-          </Pressable>
-        ))}
+        <Text style={styles.sectionTitle}>Available Events</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#FF6000" style={{ marginTop: 20 }} />
+        ) : availableEvents.length > 0 ? (
+          availableEvents.map((event) => (
+            <Pressable
+              key={event._id}
+              style={styles.eventCard}
+              onPress={() => router.push(`/events/${event._id}`)}
+            >
+              <Image
+                source={{ uri: event.coverImage?.url }}
+                style={styles.eventImage}
+                resizeMode="cover"
+              />
+              <View style={styles.eventInfo}>
+                <Text style={styles.eventTitle}>{event.name}</Text>
+                <Text style={styles.eventMeta}>{event.category} • {event.location?.city}</Text>
+                <Text style={styles.eventPrice}>Rs. {event.price}</Text>
+                <Text style={{ color: 'green', fontWeight: 'bold' }}>Tickets Available</Text>
+              </View>
+            </Pressable>
+          ))
+        ) : (
+          <Text style={{ marginLeft: 20, color: '#999' }}>No available events right now.</Text>
+        )}
 
         {/* Why Grooviti */}
         <Text style={styles.sectionTitle}>Why Grooviti?</Text>
@@ -146,6 +180,14 @@ const styles = StyleSheet.create({
   },
   eventMeta: {
     color: '#666',
+    fontSize: 14,
+    marginTop: 2,
+  },
+  eventPrice: {
+    color: '#FF6000',
+    fontSize: 14,
+    marginTop: 4,
+    fontWeight: 'bold',
   },
   featureRow: {
     marginHorizontal: 20,

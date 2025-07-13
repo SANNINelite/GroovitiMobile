@@ -38,12 +38,12 @@ export default function LoginScreen() {
 
       if (res.data.success) {
         setToken(res.data.token);
-        setUser({ email, role: res.data.role });
+        setUser({ email: res.data.email }); // only setting email
         router.replace('/landing');
       } else {
         Alert.alert('Login failed', res.data.message || 'Try again');
       }
-    } catch (err) {
+    } catch (err: any) {
       Alert.alert('Login error', err?.response?.data?.message || 'Something went wrong');
     } finally {
       setLoading(false);

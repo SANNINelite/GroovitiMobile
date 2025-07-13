@@ -1,14 +1,14 @@
 import { Tabs } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Feather } from '@expo/vector-icons'; // Added Feather for 'search' icon
 import { SafeAreaView, StyleSheet, View } from 'react-native';
-import Header from '../../components/Header'; // adjust path if needed
+import Header from '../../components/Header'; // Keep this customized if you're adding the bell icon there
 
 export default function TabsLayout() {
   return (
     <View style={styles.wrapper}>
       {/* Top Safe Area + Global Header */}
       <SafeAreaView style={styles.safeAreaTop} />
-      <Header />
+      <Header /> {/* <- You should add the bell icon inside this component */}
 
       {/* Tabs (Bottom Navigation) */}
       <Tabs
@@ -44,7 +44,7 @@ export default function TabsLayout() {
           options={{
             tabBarLabel: 'Explore',
             tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="travel-explore" size={size} color={color} />
+              <Feather name="search" size={size} color={color} />
             ),
           }}
         />
@@ -74,9 +74,10 @@ export default function TabsLayout() {
         <Tabs.Screen name="plans" options={{ href: null }} />
         <Tabs.Screen name="contact-us" options={{ href: null }} />
         <Tabs.Screen name="communities" options={{ href: null }} />
-        <Tabs.Screen name="events/[id]" options={{ href: null }} />
         <Tabs.Screen name="login" options={{ href: null }} />
         <Tabs.Screen name="edit-profile" options={{ href: null }} />
+        <Tabs.Screen name="events/[eventId]" options={{ href: null }} />
+        <Tabs.Screen name="notifications" options={{ href: null }} />
       </Tabs>
 
       {/* Bottom Safe Area */}
