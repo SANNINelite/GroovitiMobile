@@ -78,6 +78,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="edit-profile" options={{ href: null }} />
         <Tabs.Screen name="events/[eventId]" options={{ href: null }} />
         <Tabs.Screen name="notifications" options={{ href: null }} />
+        <Tabs.Screen name="bookticket" options={{ href: null }} />
       </Tabs>
 
       {/* Bottom Safe Area */}

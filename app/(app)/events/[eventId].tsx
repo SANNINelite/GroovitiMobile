@@ -8,22 +8,28 @@ import {
   ScrollView,
   TouchableOpacity,
   Share,
-  Linking,
-  Platform,
+  Dimensions,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { BASE_URL } from '../../../constants';
+import { WebView } from 'react-native-webview';
+import * as Linking from 'expo-linking';
+
+const screenHeight = Dimensions.get('window').height;
 
 interface EventType {
   _id: string;
   name: string;
   description: string;
-  category: string;
   price: number;
-  totalTickets: number;
+  category: string;
+  coverImage: {
+    url: string;
+    public_id: string;
+  };
   ticketsSold: number;
-  coverImage: { url: string };
+  totalTickets: number;
   location: {
     city: string;
     state?: string;
@@ -32,10 +38,12 @@ interface EventType {
     longitude: number;
     address?: string;
   };
+  createdAt: string;
 }
 
 export default function EventDetails() {
   const { eventId } = useLocalSearchParams();
+  const router = useRouter(); // 👉 Used to navigate to bookticket.tsx
   const [event, setEvent] = useState<EventType | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +69,7 @@ export default function EventDetails() {
     if (event) {
       try {
         await Share.share({
-          message: `Check out this event: ${event.name} at ${event.location.city}`,
+          message: `Check out this event: ${event.name} in ${event.location.city}. Book now on Grooviti!`,
         });
       } catch (error) {
         console.error('Error sharing:', error);
@@ -69,11 +77,10 @@ export default function EventDetails() {
     }
   };
 
-  const openInMaps = () => {
+  const openDirections = () => {
     if (event) {
-      const { latitude, longitude } = event.location;
-      const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-      Linking.openURL(url).catch(err => console.error("Failed to open map:", err));
+      const url = `https://www.google.com/maps/search/?api=1&query=${event.location.latitude},${event.location.longitude}`;
+      Linking.openURL(url).catch(err => console.error("Couldn't open map:", err));
     }
   };
 
@@ -87,9 +94,29 @@ export default function EventDetails() {
 
   const availableTickets = event.totalTickets - event.ticketsSold;
 
+  const mapHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+        <style>
+          body, html { margin: 0; padding: 0; height: 100%; }
+          iframe { width: 100%; height: 100%; border: 0; border-radius: 12px; }
+        </style>
+      </head>
+      <body>
+        <iframe
+          src="https://maps.google.com/maps?q=${event.location.latitude},${event.location.longitude}&z=16&output=embed"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </body>
+    </html>
+  `;
+
   return (
-    <View style={styles.wrapper}>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+    <View style={styles.page}>
+      <ScrollView contentContainerStyle={styles.container}>
         <Image source={{ uri: event.coverImage.url }} style={styles.banner} />
         <Text style={styles.title}>{event.name}</Text>
 
@@ -99,7 +126,7 @@ export default function EventDetails() {
         <View style={styles.infoBox}>
           <MaterialIcons name="place" size={22} color="#FF6000" />
           <Text style={styles.infoText}>
-            {event.location.address}, {event.location.city}, {event.location.state}, {event.location.country}
+            {event.location.city}, {event.location.state}, {event.location.country}
           </Text>
         </View>
 
@@ -115,20 +142,33 @@ export default function EventDetails() {
           <Text style={styles.infoText}>{availableTickets} tickets left</Text>
         </View>
 
-        {/* Google Maps Box */}
-        <TouchableOpacity onPress={openInMaps} style={styles.mapBox}>
-          <MaterialIcons name="map" size={24} color="#fff" />
-          <Text style={styles.mapText}>Open in Google Maps</Text>
-        </TouchableOpacity>
+        {/* Map Preview */}
+        <Text style={styles.mapHeading}>📍 Location Preview</Text>
+        <View style={styles.mapBox}>
+          <WebView
+            originWhitelist={['*']}
+            source={{ html: mapHtml }}
+            style={styles.mapPreview}
+            javaScriptEnabled
+            scrollEnabled={false}
+          />
+          <TouchableOpacity style={styles.directionsBtn} onPress={openDirections}>
+            <FontAwesome5 name="location-arrow" size={14} color="#fff" />
+            <Text style={styles.directionsText}> Get Directions</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Sticky Bottom Buttons */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={[styles.bottomButton, styles.bookButton]}>
+      <View style={styles.buttonGroup}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push(`/bookticket?eventId=${event._id}`)}
+        >
           <Text style={styles.buttonText}>Book Now</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.bottomButton, styles.shareButton]} onPress={handleShare}>
+        <TouchableOpacity style={[styles.button, styles.shareButton]} onPress={handleShare}>
           <Text style={styles.buttonText}>Share</Text>
         </TouchableOpacity>
       </View>
@@ -137,13 +177,13 @@ export default function EventDetails() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
+  page: {
     flex: 1,
     backgroundColor: '#fff',
   },
   container: {
-    flex: 1,
     padding: 16,
+    paddingBottom: 100,
   },
   banner: {
     width: '100%',
@@ -178,41 +218,58 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#555',
   },
-  mapBox: {
-    flexDirection: 'row',
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  mapText: {
-    color: '#fff',
+  mapHeading: {
     fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 8,
+    color: '#333',
   },
-  bottomBar: {
+  mapBox: {
+    height: 200,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: 20,
+  },
+  mapPreview: {
+    flex: 1,
+  },
+  directionsBtn: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: '#FF6000',
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  directionsText: {
+    color: '#fff',
+    marginLeft: 6,
+    fontSize: 13,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    backgroundColor: '#fff',
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    padding: 12,
-    backgroundColor: '#fff',
+    borderTopColor: '#eee',
     borderTopWidth: 1,
-    borderColor: '#ddd',
   },
-  bottomButton: {
+  button: {
     flex: 1,
-    padding: 14,
+    backgroundColor: '#FF6000',
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginHorizontal: 5,
-  },
-  bookButton: {
-    backgroundColor: '#FF6000',
   },
   shareButton: {
     backgroundColor: '#666',
@@ -220,7 +277,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 16,
   },
   error: {
     textAlign: 'center',

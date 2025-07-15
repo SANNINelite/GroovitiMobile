@@ -4,6 +4,9 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar, StyleSheet } from 'react-native';
 import { StoreProvider } from '../context/StoreContext';
 import CustomDrawer from '../components/CustomDrawer';
+import Toast from 'react-native-toast-message';
+
+<Toast />
 
 export default function RootLayout() {
   return (
