@@ -1,32 +1,41 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
-import { useStore } from '../../context/StoreContext'; // ✅ Adjusted relative path
-import type { StoreContextType } from '../../context/StoreContext'; // ✅ For type safety
+import React from 'react';
+import { View, Text, Image, StyleSheet, ActivityIndicator } from 'react-native';
+import { useStore } from '../../context/StoreContext';
 
-const defaultProfilePic = require('../../assets/images/profile.jpg'); // ✅ Default fallback image
+const defaultProfilePic = require('../../assets/images/profile.jpg');
 
 export default function ProfileScreen() {
-  const { user } = useStore() as StoreContextType;
+  const { user } = useStore();
+
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6000" />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Image
-        source={user?.profilePic ? { uri: user.profilePic } : defaultProfilePic}
+        source={user.profilePic ? { uri: user.profilePic } : defaultProfilePic}
         style={styles.profileImage}
       />
-      <Text style={styles.name}>{user?.name || 'Guest'}</Text>
-      <Text style={styles.email}>{user?.email || 'guest@example.com'}</Text>
+      <Text style={styles.name}>{user.name || 'Guest User'}</Text>
+      <Text style={styles.email}>{user.email}</Text>
 
       <View style={styles.statsContainer}>
         <View style={styles.stat}>
-          <Text style={styles.statNumber}>{user?.followers || 0}</Text>
+          <Text style={styles.statNumber}>{user.followers || 0}</Text>
           <Text style={styles.statLabel}>Followers</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statNumber}>{user?.following || 0}</Text>
+          <Text style={styles.statNumber}>{user.following || 0}</Text>
           <Text style={styles.statLabel}>Following</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statNumber}>{user?.bookings || 0}</Text>
+          <Text style={styles.statNumber}>{user.bookings || 0}</Text>
           <Text style={styles.statLabel}>Bookings</Text>
         </View>
       </View>
@@ -46,6 +55,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     marginBottom: 20,
+    backgroundColor: '#eee',
   },
   name: {
     fontSize: 24,
@@ -69,9 +79,19 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#FF6000',
   },
   statLabel: {
     fontSize: 14,
+    color: 'gray',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
     color: 'gray',
   },
 });

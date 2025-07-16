@@ -1,37 +1,59 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+  TextInput,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
+  ScrollView,
   Alert,
+  StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { BASE_URL } from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Toast from 'react-native-toast-message';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { BASE_URL } from '../../constants';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function EventBookingScreen() {
-  const { eventId } = useLocalSearchParams();
+interface EventType {
+  _id: string;
+  name: string;
+  price: number;
+  coverImage: { url: string };
+}
+
+export default function BookTicketScreen() {
   const router = useRouter();
-
-  const [event, setEvent] = useState<any>(null);
+  const { eventId } = useLocalSearchParams();
+  const [event, setEvent] = useState<EventType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [count, setCount] = useState(1);
-  const [booking, setBooking] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  });
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const fetchEvent = async () => {
       try {
+        setLoading(true);
         const res = await fetch(`${BASE_URL}/api/event/${eventId}`);
         const json = await res.json();
+
         if (json.success) {
           setEvent(json.data);
+        } else {
+          Alert.alert('Error', json.message || 'Event not found');
+          router.back();
         }
       } catch (err) {
-        console.error("Failed to fetch event:", err);
+        console.error('Failed to fetch event:', err);
+        Alert.alert('Error', 'Failed to load event details');
+        router.back();
       } finally {
         setLoading(false);
       }
@@ -40,172 +62,359 @@ export default function EventBookingScreen() {
     fetchEvent();
   }, [eventId]);
 
-  const handleBook = async () => {
-    if (!event || count < 1) return;
+  const handleChange = (key: string, value: string) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const increaseQty = () => setQuantity(q => q + 1);
+  const decreaseQty = () => setQuantity(q => (q > 1 ? q - 1 : 1));
+
+  const validateForm = () => {
+    if (!form.firstName.trim()) {
+      Alert.alert('Error', 'Please enter your first name');
+      return false;
+    }
+    if (!form.lastName.trim()) {
+      Alert.alert('Error', 'Please enter your last name');
+      return false;
+    }
+    if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return false;
+    }
+    if (!form.phone.trim() || !/^\d{10}$/.test(form.phone)) {
+      Alert.alert('Error', 'Please enter a valid 10-digit phone number');
+      return false;
+    }
+    return true;
+  };
+
+  const handlePayment = async () => {
+    if (!event || !validateForm()) return;
 
     try {
-      setBooking(true);
+      setPaymentProcessing(true);
+      
+      // Directly get tokens without expiration checks
       const token = await AsyncStorage.getItem('authToken');
+      const userId = await AsyncStorage.getItem('userId');
+
+      if (!token || !userId) {
+        Alert.alert(
+          'Login Required',
+          'Please login to complete your booking',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Login', onPress: () => router.replace('/login') }
+          ]
+        );
+        return;
+      }
+
+      const bookingData = {
+        userId,
+        items: [{ _id: event._id, quantity }],
+        amount: event.price * quantity,
+        address: {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          phone: form.phone,
+          event: event.name,
+        },
+      };
 
       const res = await fetch(`${BASE_URL}/api/booking/ticket`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          eventId: event._id,
-          quantity: count,
-        }),
+        body: JSON.stringify(bookingData),
       });
 
-      const json = await res.json();
+      const result = await res.json();
 
-      if (json.success) {
-        Toast.show({
-          type: 'success',
-          text1: 'Booking Confirmed!',
-          text2: 'Your ticket has been booked 🎉',
-        });
-        router.push('/(app)/profile');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Booking Failed',
-          text2: json.message || 'Something went wrong',
-        });
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to create booking');
       }
-    } catch (err) {
-      console.error("Booking error:", err);
-      Alert.alert('Booking Error', err.message || 'Please try again later');
+
+      // Proceed to payment
+      router.push({
+        pathname: '/(app)/razorpay',
+        params: {
+          orderId: result.order_id,
+          amount: result.amount,
+          name: `${form.firstName} ${form.lastName}`,
+          email: form.email,
+          contact: form.phone,
+        },
+      });
+
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      Alert.alert('Error', error.message || 'Something went wrong. Please try again.');
     } finally {
-      setBooking(false);
+      setPaymentProcessing(false);
     }
   };
 
+  const subtotal = event?.price ? event.price * quantity : 0;
+  const processingFee = 0;
+  const total = subtotal + processingFee;
+
   if (loading) {
-    return <ActivityIndicator size="large" color="#FF6000" style={{ marginTop: 20 }} />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6000" />
+      </View>
+    );
   }
 
   if (!event) {
-    return <Text style={styles.error}>Event not found</Text>;
-  }
-
-  const availableTickets = event.totalTickets - event.ticketsSold;
-
-  return (
-    <View style={styles.container}>
-      <Image source={{ uri: event.coverImage.url }} style={styles.banner} />
-
-      <Text style={styles.title}>{event.name}</Text>
-      <Text style={styles.price}>
-        {event.price === 0 ? 'Free' : `₹${event.price}`} per ticket
-      </Text>
-
-      <Text style={styles.label}>Select Quantity</Text>
-      <View style={styles.counterBox}>
-        <TouchableOpacity
-          style={styles.counterBtn}
-          onPress={() => setCount((prev) => Math.max(1, prev - 1))}
-        >
-          <Text style={styles.counterText}>-</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.count}>{count}</Text>
-
-        <TouchableOpacity
-          style={styles.counterBtn}
-          onPress={() => setCount((prev) => Math.min(availableTickets, prev + 1))}
-        >
-          <Text style={styles.counterText}>+</Text>
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Event not available</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backLink}>Go back</Text>
         </TouchableOpacity>
       </View>
+    );
+  }
 
-      <Text style={styles.remaining}>Available: {availableTickets} tickets</Text>
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Book Tickets</Text>
+      </View>
+
+      <View style={styles.card}>
+        {imageError ? (
+          <View style={[styles.image, styles.imagePlaceholder]}>
+            <Ionicons name="image-outline" size={40} color="#ccc" />
+          </View>
+        ) : (
+          <Image source={{ uri: event.coverImage.url }} style={styles.image} />
+        )}
+        <View style={styles.eventDetails}>
+          <Text style={styles.eventName}>{event.name}</Text>
+          <Text style={styles.eventPrice}>₹{event.price}</Text>
+          <View style={styles.qtyRow}>
+            <TouchableOpacity 
+              style={styles.qtyBtn} 
+              onPress={decreaseQty}
+              disabled={quantity <= 1}
+            >
+              <Text style={[styles.qtyText, quantity <= 1 && styles.disabledQty]}>-</Text>
+            </TouchableOpacity>
+            <Text style={styles.qtyValue}>{quantity}</Text>
+            <TouchableOpacity style={styles.qtyBtn} onPress={increaseQty}>
+              <Text style={styles.qtyText}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Your Details</Text>
+        <TextInput
+          placeholder="First Name"
+          value={form.firstName}
+          onChangeText={text => handleChange('firstName', text)}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Last Name"
+          value={form.lastName}
+          onChangeText={text => handleChange('lastName', text)}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Email"
+          value={form.email}
+          onChangeText={text => handleChange('email', text)}
+          style={styles.input}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          placeholder="Phone"
+          value={form.phone}
+          onChangeText={text => handleChange('phone', text)}
+          style={styles.input}
+          keyboardType="phone-pad"
+        />
+      </View>
+
+      <View style={styles.summary}>
+        <View style={styles.summaryRow}>
+          <Text>Tickets ×{quantity}</Text>
+          <Text>₹{subtotal.toFixed(2)}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text>Processing Fee</Text>
+          <Text>₹{processingFee.toFixed(2)}</Text>
+        </View>
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalAmount}>₹{total.toFixed(2)}</Text>
+        </View>
+      </View>
 
       <TouchableOpacity
-        style={styles.payBtn}
-        onPress={handleBook}
-        disabled={booking || availableTickets === 0}
+        style={[styles.payButton, paymentProcessing && styles.payButtonDisabled]}
+        onPress={handlePayment}
+        disabled={paymentProcessing}
       >
-        <Text style={styles.payText}>
-          {booking ? 'Booking...' : 'Confirm Booking'}
-        </Text>
+        {paymentProcessing ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.payButtonText}>Proceed to Pay ₹{total.toFixed(2)}</Text>
+        )}
       </TouchableOpacity>
-
-      <Toast />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: '#fff',
+    padding: 20,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  banner: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 16,
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    color: '#333',
-  },
-  price: {
-    fontSize: 16,
-    color: '#FF6000',
+  errorText: {
+    fontSize: 18,
+    color: '#ff3333',
     marginBottom: 20,
   },
-  label: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#444',
-    marginBottom: 6,
+  backLink: {
+    color: '#FF6000',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
-  counterBox: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  card: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    padding: 15,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+  imagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#eee',
+  },
+  eventDetails: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  eventName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  eventPrice: {
+    fontSize: 16,
+    color: '#FF6000',
+    marginVertical: 10,
+  },
+  qtyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  qtyBtn: {
+    backgroundColor: '#eee',
+    padding: 8,
+    borderRadius: 6,
+  },
+  qtyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  disabledQty: {
+    color: '#ccc',
+  },
+  qtyValue: {
+    marginHorizontal: 15,
+    fontSize: 16,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+    paddingVertical: 12,
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  summary: {
+    marginVertical: 20,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
-  counterBtn: {
-    backgroundColor: '#eee',
-    padding: 10,
-    borderRadius: 6,
-    marginHorizontal: 10,
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
-  counterText: {
-    fontSize: 20,
-    color: '#333',
+  totalLabel: {
+    fontWeight: 'bold',
   },
-  count: {
-    fontSize: 18,
-    fontWeight: '600',
+  totalAmount: {
+    fontWeight: 'bold',
+    color: '#FF6000',
   },
-  remaining: {
-    marginBottom: 30,
-    fontSize: 14,
-    color: '#666',
-  },
-  payBtn: {
+  payButton: {
     backgroundColor: '#FF6000',
-    padding: 14,
+    padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
-  payText: {
+  payButtonDisabled: {
+    opacity: 0.7,
+  },
+  payButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-  },
-  error: {
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
-    color: '#999',
   },
 });

@@ -5,8 +5,9 @@ import React, {
   ReactNode,
 } from 'react';
 
-// Define the shape of user data
+// ✅ Updated: Define the shape of user data including _id
 export interface UserType {
+  _id: string;
   email: string;
   name?: string;
   profilePic?: string;

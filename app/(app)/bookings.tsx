@@ -17,20 +17,20 @@ type Booking = {
 };
 
 const bookings: Booking[] = [
-  {
-    id: '1',
-    title: 'Neon Music Fest',
-    location: 'Mumbai',
-    date: 'July 20',
-    image: require('../../assets/images/sunburn.jpg'),
-  },
-  {
-    id: '2',
-    title: 'AI Conference 2025',
-    location: 'Delhi',
-    date: 'August 2',
-    image: require('../../assets/images/startup.jpg'),
-  },
+  // {
+  //   id: '1',
+  //   title: 'Neon Music Fest',
+  //   location: 'Mumbai',
+  //   date: 'July 20',
+  //   image: require('../../assets/images/sunburn.jpg'),
+  // },
+  // {
+  //   id: '2',
+  //   title: 'AI Conference 2025',
+  //   location: 'Delhi',
+  //   date: 'August 2',
+  //   image: require('../../assets/images/startup.jpg'),
+  // },
 ];
 
 export default function BookingsScreen() {
