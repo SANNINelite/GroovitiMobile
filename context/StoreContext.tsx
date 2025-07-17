@@ -1,11 +1,14 @@
 import React, {
+  ReactNode,
   createContext,
   useContext,
   useState,
-  ReactNode,
 } from 'react';
 
+<<<<<<< HEAD
 // ✅ Updated: Define the shape of user data including _id
+=======
+>>>>>>> 3d894fd (coomit)
 export interface UserType {
   _id: string;
   email: string;
@@ -16,7 +19,7 @@ export interface UserType {
   bookings?: number;
 }
 
-// Define the shape of context
+
 interface StoreContextType {
   apiBaseUrl: string;
   token: string;
@@ -25,15 +28,13 @@ interface StoreContextType {
   setUser: (user: UserType | null) => void;
 }
 
-// Create context
+
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-// Define props for provider
 interface StoreProviderProps {
   children: ReactNode;
 }
 
-// StoreProvider component
 export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   const [apiBaseUrl] = useState('https://grooviti-backend.onrender.com');
   const [token, setToken] = useState<string>('');
@@ -46,7 +47,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   );
 };
 
-// Custom hook
+
 export const useStore = (): StoreContextType => {
   const context = useContext(StoreContext);
   if (!context) {
