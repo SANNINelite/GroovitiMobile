@@ -5,10 +5,6 @@ import React, {
   useState,
 } from 'react';
 
-<<<<<<< HEAD
-// ✅ Updated: Define the shape of user data including _id
-=======
->>>>>>> 3d894fd (coomit)
 export interface UserType {
   _id: string;
   email: string;
