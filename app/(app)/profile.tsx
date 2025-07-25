@@ -1,19 +1,19 @@
+import { Entypo, MaterialIcons } from '@expo/vector-icons';
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
   ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
+  Image,
   Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import axios from 'axios';
 import { BASE_URL } from '../../constants'; // Adjust path if needed
 import { useStore } from '../../context/StoreContext';
-import { MaterialIcons, Entypo } from '@expo/vector-icons';
 
 const defaultProfilePic = require('../../assets/images/profile.jpg');
 const defaultCoverPhoto = require('../../assets/images/cover.jpg');
@@ -39,6 +39,7 @@ export default function ProfileScreen() {
         const response = await axios.get(`${BASE_URL}/api/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Fetched user:', response.data.user); // <--- Add this line
         setUser(response.data.user);
         setFormData({
           name: response.data.user.name || '',
@@ -170,7 +171,7 @@ export default function ProfileScreen() {
       {/* Profile Image and Info */}
       <View style={styles.headerSection}>
         <Image
-          source={user.profilePic ? { uri: user.profilePic } : defaultProfilePic}
+          source={user.profileImage?.url ? { uri: user.profileImage.url } : defaultProfilePic}
           style={styles.profileImage}
         />
 

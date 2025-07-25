@@ -1,39 +1,57 @@
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
   Image,
-  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const teamMembers = [
   { name: 'Aditya Divate', role: 'CEO & Founder' },
   { name: 'Swaroop Mane', role: 'CTO' },
+  { name: 'Akash Patil', role: 'App developer' },
   { name: 'Saksham Gawande', role: 'CMO' },
   { name: 'Siddhi Pankhade', role: 'Lead Developer' },
   { name: 'Samiksha Ner', role: 'UI/UX Designer' },
   { name: 'Esha Pansare', role: 'CDO' },
-  { name: 'Akash Patil', role: 'Strategy Head' },
   { name: 'Diksha Waghulde', role: 'HR' },
-  { name: 'New Employee', role: '--' },
-  { name: 'New Employee', role: '--' },
 ];
 
 export default function AboutUsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>About Us</Text>
-        <Text style={styles.description}>
-          Welcome to our platform grooviti.com, where you can discover and book exciting events
-          happening near you. Whether it's concerts, tech conferences, or food festivals, we bring
-          them all to one place.
+        <Text style={styles.title}>Connecting People Through Live Events</Text>
+        <Text style={styles.intro}>
+          Grooviti is your gateway to discovering and booking unforgettable experiences. We bring every kind of event—from buzzing concerts to vibrant college fests—together on one seamless platform.
         </Text>
-        <Text style={styles.description}>
-          Our mission is to empower event creators and enrich communities by providing a comprehensive
-          event listing platform.
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Our Mission</Text>
+          <Text style={styles.sectionText}>
+            To make finding and attending events effortless and fun, empowering organizers and helping you create your next great story.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>What We Promise</Text>
+          <View style={styles.promiseList}>
+            <Text style={styles.promiseItem}>
+              <Text style={styles.bold}>Effortless Discovery:</Text> Find your vibe with a curated, easy-to-browse platform.
+            </Text>
+            <Text style={styles.promiseItem}>
+              <Text style={styles.bold}>Instant Booking:</Text> Secure your spot in seconds. No hassle, no FOMO.
+            </Text>
+            <Text style={styles.promiseItem}>
+              <Text style={styles.bold}>One Hub, All Events:</Text> From parties to workshops, it's all here.
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.tagline}>
+          <Text style={styles.bold}>Book it. Groove it. Live it.</Text>
         </Text>
 
         <Text style={styles.sectionTitle}>Meet Our Team</Text>
@@ -72,18 +90,48 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FF6000',
     marginBottom: 10,
+    textAlign: 'center',
   },
-  description: {
+  intro: {
     fontSize: 16,
     color: '#444',
-    marginBottom: 12,
+    marginBottom: 18,
     lineHeight: 22,
+    textAlign: 'center',
+  },
+  section: {
+    marginBottom: 18,
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '600',
-    marginVertical: 20,
+    marginBottom: 8,
     color: '#333',
+  },
+  sectionText: {
+    fontSize: 16,
+    color: '#444',
+    lineHeight: 22,
+  },
+  promiseList: {
+    marginTop: 4,
+    marginLeft: 8,
+  },
+  promiseItem: {
+    fontSize: 15,
+    color: '#444',
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+  bold: {
+    fontWeight: 'bold',
+    color: '#FF6000',
+  },
+  tagline: {
+    fontSize: 18,
+    color: '#222',
+    marginVertical: 18,
+    textAlign: 'center',
   },
   teamGrid: {
     flexDirection: 'row',

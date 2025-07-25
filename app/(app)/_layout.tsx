@@ -81,6 +81,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="bookticket" options={{ href: null }} />
         <Tabs.Screen name="razorpay" options={{ href: null }} />
         <Tabs.Screen name="conformation" options={{ href: null }} />
+        <Tabs.Screen name="organiser-info" options={{ href: null }} />
       </Tabs>
 
       {/* Bottom Safe Area */}
